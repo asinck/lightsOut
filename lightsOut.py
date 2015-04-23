@@ -6,7 +6,7 @@
 #The goal of the game is to turn the lights (white squares) off
 #(black).  This is accomplished by clicking on the squares, which
 #toggles that square and the vertically and horizontally adjacent
-#squares. If a square is on the edge or in a corener, it only toggles
+#squares. If a square is on the edge or in a corner, it only toggles
 #squares that are available to be toggled; it doesn't wrap around the
 #board.
 
@@ -93,10 +93,10 @@ def newGame():
 #    lights from the first row. It repeats this in the third row to
 #    turn off all the lights in the second row, and so on until it has
 #    turned off all lights except those in the bottom row. At that
-#    point, the chase algorithm is finished (shortly), and the user
-#    must know the lights to turn on in the first row so that the next
-#    time the chase algorithm runs, it works out such that the bottom
-#    row is solved at the same time as the second row up.
+#    point, the chase algorithm is finished (for the moment), and the
+#    user must know the lights to turn on in the first row so that the
+#    next time the chase algorithm runs, it works out such that the
+#    bottom row is solved at the same time as the second row up.
 
 #One of my later goals is to make an AI that can actually solve
 #puzzles of arbitrary sizes, but this isn't so much of a feature for
