@@ -161,6 +161,7 @@ def updateHighScores():
             num2 = initScores[i]
             if num1 != num2:
                 newHighScore = True
+    
     if newHighScore:
         tkMessageBox.showinfo("High Score!", "You set a new high score!")
         
@@ -209,6 +210,7 @@ def updateSettings(var=None):
         col = int(newCol)
         size = row*col
         resized = True
+
     if resized:
         resize(row, col)
     #check to see if the colors were changed, and apply the changes if
