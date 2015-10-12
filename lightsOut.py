@@ -1,3 +1,7 @@
+#This is the version of the program that can use gradients on the
+#buttons. 
+
+
 #Adam Sinck
 #Lights Out
 #This program will implement a lights out game.
@@ -23,7 +27,9 @@ imports = [
     "import io",
     "import string",
     "import random",
-    "import time"
+    "import time",
+    "import Image, ImageDraw",
+    "import math"
 ]
 #failedPackages will keep a record of the names of the packages that
 #failed to import, so that the program can go through the entire list
@@ -62,10 +68,9 @@ scrambling = False
 row = 5
 col = 5
 size = row * col
-#the user can set the colors of the two states of the lights
-bgColor = "#000" #black, light out
-fgColor = "#FFF" #white, light on
 
+#this holds whether or not the user has gradients on the buttons or not
+gradient = True
 
 #this will start a new game
 def newGame():
@@ -111,7 +116,7 @@ def newGame():
 
 def chase():
     for i in range(col, size):
-        if lights[i-col][0]["bg"] == fgColor:
+        if lights[i-col][0]["image"] == str(fg):
             change(i)
 
 #this will update the high scores.
@@ -193,14 +198,11 @@ def hideSettings():
 
 #this will apply the settings
 def updateSettings(var=None):
-    global row, col, size, bgColor, fgColor
-    #these are for new row/column sizes
+    global row, col, size
     newRow = rowInput.get()
     newCol = colInput.get()
-    #these are for new on/off colors
-    newbgColor = bgColorInput.get()
-    newfgColor = fgColorInput.get()
-    #set the new row/col/size values
+#    newbgColor = bgColorInput.get()
+#    newfgColor = fgColorInput.get()
     resized = False
     if newRow != '' and int(newRow) != row:
         row = int(newRow)
@@ -213,30 +215,100 @@ def updateSettings(var=None):
 
     if resized:
         resize(row, col)
-    #check to see if the colors were changed, and apply the changes if
-    #needed
-    newColors = False
-    oldbgColor = bgColor
-    oldfgColor = fgColor
-    if newbgColor != bgColor and newbgColor != '':
-        bgColor = newbgColor
-        newColors = True
-    if newfgColor != fgColor and newfgColor != '':
-        fgColor = newfgColor
-        newColors = True
-    if newColors:
-        changeColors(oldbgColor)
+    changeColors()
+
+
+def processColor(color):
+    if color == '':
+        return ''
+    color = color.replace("#",'')
+    if len(color) != 6:
+        r, g, b = color[0], color[1], color[2]
+        return "#" + r+r+g+g+b+b
+    return "#" + color
+    
+def toggleGradient(var=None):
+    global gradient
+    if gradient:
+        gradient = False
+        gradientButton.config(text = "Turn Gradient On", bg = "#CCC")
+    else:
+        gradient = True
+        gradientButton.config(text = "Turn Gradient Off", bg = "#999")
 
 #this applies a color settings change to the board
-def changeColors(oldbgColor):
-    global bgColor, fgColor
-    for i in range(size):
-        if lights[i][0]["bg"] == oldbgColor:
-            lights[i][0]["bg"] = bgColor
-        else:
-            lights[i][0]["bg"] = fgColor
-        lights[i][0].config(activebackground=lights[i][0]["bg"])
+def changeColors(var=None):
+    global bg,fg,gradient
 
+    #background
+    bgInput = processColor(bgColorInput.get())
+    newBG = bg
+    if bgInput != '':
+        if gradient:
+            generateColor(bgInput)
+        else:
+            img = Image.new("RGB", (30,30), bgInput)
+            img.save("out.png", "PNG")
+        newBG = PhotoImage(file="out.png")
+    
+    #foreground
+    fgInput = processColor(fgColorInput.get())
+    newFG = fg
+    if fgInput != '':
+        if gradient:
+            generateColor(fgInput)
+        else:
+            img = Image.new("RGB", (30,30), fgInput)
+            img.save("out.png", "PNG")
+        newFG = PhotoImage(file="out.png")
+    
+    for i in range(size):
+        if str(lights[i][0]["image"]) == str(fg):
+            lights[i][0]["image"] = newFG
+        else:
+            lights[i][0]["image"] = newBG
+    bg = newBG
+    fg = newFG
+
+def generateColor(color):
+    size=30
+    center = size/2
+    img = Image.new("RGB", (size, size), "#FFFFFF")
+    output = ImageDraw.Draw(img)
+    color = color.replace("#",'')
+    if len(color) == 6:
+        r, g, b = color[0:2], color[2:4], color[4:6]
+    else:
+        r, g, b = color[0], color[1], color[2]
+    dr = int(r, 16)
+    dg = int(g, 16)
+    db = int(b, 16)
+    r, g, b = 255,255,255
+    def distance(a,b,x,y):
+        return math.sqrt( pow(x-a,2) + pow(y-b,2) )
+    #use the distance formula for a multiplier
+    for x in range(size):
+        for y in range(size):
+            r, g, b = 255,255,255
+            ratio = 1.0/distance(0,0,center,center)
+            d = distance(center, center, x, y)*ratio
+            d = .00001 if d == 0 else d
+            r,g,b = int((dr*d) * 2), int((dg*d) * 2), int((db*d) * 2)
+            output.line( (x, y, x+10, y+10), fill=(r,g,b) )
+    img.save("out.png", "PNG")
+#this gives a cool square radial gradient            
+#    for radius in range(141, 0, -1):
+#        r,g,b = r-dr, g-dg, b-db
+#        print r,g,b
+#        for x in range(radius):
+#            for y in range(radius):
+#                #color by quarter
+#                output.line((100,100,100-x,100-y),fill=(r,g,b) )
+#                output.line((100,100,100-x,100+y),fill=(r,g,b) )
+#                output.line((100,100,100+x,100-y),fill=(r,g,b) )
+#                output.line((100,100,100+x,100+y),fill=(r,g,b) )
+#
+    
 #this will change the board size and initialize it
 def resize(row, col):
     givenSize.config(text = "Current size:  " + str(col) + "x" + str(row))
@@ -259,14 +331,13 @@ def init():
         f.pack(side=TOP)
         for Cell in range(col):
             lights[count] = []
-            lights[count].append(Button(f, text="   "))
+            lights[count].append(Button(f, image=bg))
             lights[count].append(count)
             c = lights[count][1]
             lights[count][0].pack(side = LEFT)
-            lights[count][0]["bg"] = bgColor
-            lights[count][0]["fg"] = fgColor
-            lights[count][0]["width"] = 1
-            lights[count][0]["height"] = 1
+#            lights[count][0]["image"] = bg
+#            lights[count][0]["width"] = 1
+#            lights[count][0]["height"] = 1
             
             count += 1
     #set the action of the buttons
@@ -279,20 +350,20 @@ def init():
     #set the active background of the buttons to the color of the
     #button so that they don't change color when the user hovers the
     #mouse over them
-    for i in range(size):
-        lights[i][0].config(activebackground=lights[i][0]["bg"])
+#    for i in range(size):
+#        lights[i][0].config(activebackground=lights[i][0]["bg"])
 
     puzzle[0].pack()
     global moves
     moves = 0
     moveCount.config(text = "Moves:  " + str(moves))
 
-#this will toggle the color of a single cell
+#this will toggle a single cell at the given location
 def toggle(cell):
-    if lights[cell][0]["bg"] == bgColor:
-        lights[cell][0]["bg"] = fgColor
+    if lights[cell][0]["image"] == str(bg):
+        lights[cell][0]["image"] = fg
     else:
-        lights[cell][0]["bg"] = bgColor
+        lights[cell][0]["image"] = bg
     
 #this is the function that turns "lights" on or off
 #it makes sure that it can toggle the adjacent cells before trying to
@@ -313,8 +384,8 @@ def change(cell):
         toggle(cell + col)
     
     #reset the mouseover color of the buttons
-    for i in range(size):
-        lights[i][0].config(activebackground=lights[i][0]["bg"])
+#    for i in range(size):
+#        lights[i][0].config(activebackground=lights[i][0]["bg"])
     
     #increment the move count and display the number of moves
     global moves
@@ -326,7 +397,7 @@ def change(cell):
     if scrambling:
         won = False
     for i in range(size):
-        if lights[i][0]["bg"] == fgColor:
+        if lights[i][0]["image"] == str(fg):
             won = False
     #if no lights are on, display a message to the user that they won
     if won:
@@ -346,6 +417,9 @@ def scramble():
 #set up the main frame
 root = Tk()
 root.title("Lights Out")
+
+bg = PhotoImage(file="dark.png")
+fg = PhotoImage(file="blue.png")
 
 #menu
 menuFrame = Frame(root, relief = RAISED, bd = 2)
@@ -387,19 +461,24 @@ puzzle[0] = Frame(mainFrame)
 
 #a frame to hold the options
 settingsFrame = Frame(root)
+showSettings()
+
+#frames for the settings
+colorFrame = Frame(settingsFrame)
 bgColorFrame = Frame(settingsFrame)
 fgColorFrame = Frame(settingsFrame)
 rowFrame = Frame(settingsFrame)
 colFrame = Frame(settingsFrame)
+gradientFrame = Frame(settingsFrame)
 submitFrame = Frame(settingsFrame)
 
 #settings
-bgColorLabel = Label(bgColorFrame, text = "Enter a background color")
-bgColorInput = Entry(bgColorFrame, bd=5, width = 5)
+bgColorLabel = Label(bgColorFrame, text = "Enter a background gradient color")
+bgColorInput = Entry(bgColorFrame, bd=5, width = 7)
 bgColorInput.bind("<Return>", updateSettings)
 
-fgColorLabel = Label(fgColorFrame, text = "Enter a foreground color")
-fgColorInput = Entry(fgColorFrame, bd=5, width = 5)
+fgColorLabel = Label(fgColorFrame, text = "Enter a foreground gradient color")
+fgColorInput = Entry(fgColorFrame, bd=5, width = 7)
 fgColorInput.bind("<Return>", updateSettings)
 
 rowLabel = Label(rowFrame, text = "Enter a new row size")
@@ -410,36 +489,40 @@ colLabel = Label(colFrame, text = "Enter a new column size")
 colInput = Entry(colFrame, bd=5, width = 5)
 colInput.bind("<Return>", updateSettings)
 
-submit = Button(submitFrame, text ="Apply", command = updateSettings)
-cancel = Button(submitFrame, text ="Cancel", command = hideSettings)
-chase = Button(submitFrame, text ="Chase", command = chase)
+gradientButton=Button(gradientFrame,text="Turn Gradient Off",bg="#999",command=lambda:toggleGradient())
 
-#pack up like it's evacuating earth
+
+colorFrame.pack(side = TOP)
 bgColorFrame.pack(side = TOP)
 fgColorFrame.pack(side = TOP)
 rowFrame.pack(side = TOP)
 colFrame.pack(side = TOP)
+gradientFrame.pack(side = TOP)
 submitFrame.pack(side = TOP)
 
-bgColorLabel.pack(side = LEFT)
-bgColorInput.pack(side = LEFT)
-
-fgColorLabel.pack(side = LEFT)
-fgColorInput.pack(side = LEFT)
+bgColorLabel.pack(side=LEFT)
+bgColorInput.pack(side=LEFT)
+fgColorLabel.pack(side=LEFT)
+fgColorInput.pack(side=LEFT)
 
 rowLabel.pack(side = LEFT)
 rowInput.pack(side = LEFT)
 colLabel.pack(side = LEFT)
 colInput.pack(side = LEFT)
+gradientButton.pack(side=TOP)
 
-submit.pack(side=LEFT)
-cancel.pack(side=RIGHT)
+chase = Button(submitFrame, text ="Chase", command = chase)
+submit = Button(submitFrame, text ="Apply", command = updateSettings)
+cancel = Button(submitFrame, text ="Cancel", command = hideSettings)
 
 #the following line is for a button that will automate the
 #"chase" strategy. It will solve everything down to the
 #bottom row. To disable this feature, comment out the
 #following line.
 chase.pack(side=LEFT)
+submit.pack(side=LEFT)
+cancel.pack(side=RIGHT)
+settingsFrame.pack_forget()
 
 #so it begins
 def main():
