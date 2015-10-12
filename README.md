@@ -4,6 +4,8 @@ The goal of the game is to turn the lights (white squares) off (black squares). 
 
 At the moment, the program supports changing the color of the squares; they can be either solid color or gradients. 
 
+I have no clue if this program works on mac at all; provided the packages, it should launch, but I don't know if it will actually color the buttons. I also don't know if this would work at all on windows. This does work on Ubuntu, given the right packages.
+
 For more information on the game, visit
 http://en.wikipedia.org/wiki/Lights_Out_%28game%29
 
