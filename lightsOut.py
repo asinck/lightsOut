@@ -435,11 +435,11 @@ colInput.pack(side = LEFT)
 submit.pack(side=LEFT)
 cancel.pack(side=RIGHT)
 
-#the following line is for a button that will automate the "chase" strategy.
-#It will solve everything down to the bottom row. To enable this feature,
-#uncomment the following line.
-#chase.pack(side=LEFT)
-
+#the following line is for a button that will automate the
+#"chase" strategy. It will solve everything down to the
+#bottom row. To disable this feature, comment out the
+#following line.
+chase.pack(side=LEFT)
 
 #so it begins
 def main():
